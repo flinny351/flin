@@ -5,106 +5,75 @@ const Blueprint: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6 space-y-12">
       <section>
-        <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">High-Level System Architecture</h2>
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h3 className="font-semibold text-lg mb-3 text-blue-600">Client-Side Isolation</h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              User-submitted HTML/JS is stored as raw strings in a database. When rendered, it is injected into a 
-              <strong> heavily sandboxed iframe</strong>. This ensures script execution cannot access the platform's
-              top-level document, cookies, or sensitive localStorage items.
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h3 className="font-semibold text-lg mb-3 text-blue-600">Distribution Layer</h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              In a production environment, a wildcard DNS entry (e.g., *.shopinsta.com) points to a specialized 
-              rendering service or CDN edge that fetches the code based on the subdomain slug.
-            </p>
-          </div>
+        <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Hosting Logic & Subdomains</h2>
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <p className="text-slate-600 mb-4">
+            To achieve <strong>shopname.platform.com</strong> style hosting in production:
+          </p>
+          <ol className="list-decimal list-inside space-y-3 text-slate-700 text-sm">
+            <li><strong>Wildcard DNS:</strong> Configure a CNAME record for <code>*.platform.com</code> to point to your main application server.</li>
+            <li><strong>Reverse Proxy / Middleware:</strong> In a Next.js environment, use <code>middleware.ts</code> to extract the hostname from the request.</li>
+            <li><strong>Rewrite:</strong> Map the hostname to a internal path like <code>/shops/[slug]</code>.</li>
+            <li><strong>Isolation:</strong> The rendered page contains ONLY the iframe, with no platform scripts or cookies shared.</li>
+          </ol>
         </div>
-      </section>
-
-      <section>
-        <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Suggested Tech Stack</h2>
-        <ul className="space-y-4">
-          <li className="flex items-start gap-3">
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold uppercase mt-1">Frontend</span>
-            <div>
-              <p className="font-medium">React + Next.js (App Router)</p>
-              <p className="text-slate-500 text-sm">Next.js middleware provides clean subdomain routing and SSR for SEO-optimized shop pages.</p>
-            </div>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase mt-1">Backend</span>
-            <div>
-              <p className="font-medium">Supabase / PostgreSQL</p>
-              <p className="text-slate-500 text-sm">Postgres for structured shop data. Supabase Auth for simple, secure user management.</p>
-            </div>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold uppercase mt-1">Hosting</span>
-            <div>
-              <p className="font-medium">Vercel / AWS Amplify</p>
-              <p className="text-slate-500 text-sm">Built-in support for dynamic subdomains and high-performance edge delivery.</p>
-            </div>
-          </li>
-        </ul>
       </section>
 
       <section>
         <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Database Schema</h2>
-        <pre className="bg-slate-900 text-slate-100 p-6 rounded-lg text-sm overflow-x-auto">
-{`Table: Users
-- id (uuid, pk)
-- email (string, unique)
-- created_at (timestamp)
-
-Table: Webshops
-- id (uuid, pk)
-- user_id (uuid, fk -> Users.id)
-- name (string)
-- slug (string, unique, index)
-- html_content (text)
-- css_content (text)
-- js_content (text)
-- settings (jsonb) // e.g., metadata, favicon
-- created_at (timestamp)`}
-        </pre>
-      </section>
-
-      <section>
-        <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Security Considerations</h2>
-        <div className="space-y-4 text-slate-600">
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold">1</div>
-            <p><strong>Strict Content Security Policy (CSP):</strong> Headers should restrict script execution to the iframe's origin and prevent framing of the main platform.</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold">2</div>
-            <p><strong>Input Sanitization:</strong> While we want to allow JS, we must sanitize inputs for known dangerous patterns or server-side injection if any backend processing is done.</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold">3</div>
-            <p><strong>Same-Origin Isolation:</strong> Ensuring `sandbox="allow-same-origin"` is NOT used unless absolutely necessary, preventing shops from accessing the parent's sensitive data.</p>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-100 text-slate-600 uppercase text-xs font-bold">
+              <tr>
+                <th className="px-4 py-2">Table: Users</th>
+                <th className="px-4 py-2">Type</th>
+                <th className="px-4 py-2">Constraint</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              <tr><td className="px-4 py-2">id</td><td className="px-4 py-2">UUID</td><td className="px-4 py-2">Primary Key</td></tr>
+              <tr><td className="px-4 py-2">email</td><td className="px-4 py-2">VARCHAR(255)</td><td className="px-4 py-2">Unique, Not Null</td></tr>
+              <tr><td className="px-4 py-2">password_hash</td><td className="px-4 py-2">TEXT</td><td className="px-4 py-2">Not Null</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="overflow-x-auto mt-6">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-100 text-slate-600 uppercase text-xs font-bold">
+              <tr>
+                <th className="px-4 py-2">Table: Webshops</th>
+                <th className="px-4 py-2">Type</th>
+                <th className="px-4 py-2">Constraint</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              <tr><td className="px-4 py-2">id</td><td className="px-4 py-2">UUID</td><td className="px-4 py-2">Primary Key</td></tr>
+              <tr><td className="px-4 py-2">user_id</td><td className="px-4 py-2">UUID</td><td className="px-4 py-2">Foreign Key (Users)</td></tr>
+              <tr><td className="px-4 py-2">slug</td><td className="px-4 py-2">VARCHAR(100)</td><td className="px-4 py-2">Unique, Indexed</td></tr>
+              <tr><td className="px-4 py-2">html_content</td><td className="px-4 py-2">TEXT</td><td className="px-4 py-2"></td></tr>
+              <tr><td className="px-4 py-2">status</td><td className="px-4 py-2">VARCHAR(20)</td><td className="px-4 py-2">Default 'online'</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section>
-        <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Monetization Strategies</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="border border-slate-200 p-4 rounded-lg">
-            <h4 className="font-bold mb-2">Freemium</h4>
-            <p className="text-sm text-slate-500">1 shop for free with ShopInsta branding. Paid plans for more shops.</p>
+        <h2 className="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Security Implementation</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="p-4 border border-blue-100 bg-blue-50 rounded-lg">
+            <h4 className="font-bold text-blue-800 mb-2">Sandbox Attributes</h4>
+            <p className="text-xs text-blue-700 leading-relaxed">
+              We use <code>sandbox="allow-scripts"</code>. Crucially, we omit <code>allow-same-origin</code>. 
+              This prevents the user shop from accessing the parent's localStorage, Cookies, or the DOM.
+            </p>
           </div>
-          <div className="border border-slate-200 p-4 rounded-lg">
-            <h4 className="font-bold mb-2">Custom Domains</h4>
-            <p className="text-sm text-slate-500">Premium feature to connect own .com domains instead of subdomains.</p>
-          </div>
-          <div className="border border-slate-200 p-4 rounded-lg">
-            <h4 className="font-bold mb-2">Shop Templates</h4>
-            <p className="text-sm text-slate-500">A marketplace for high-conversion frontend shop templates created by designers.</p>
+          <div className="p-4 border border-green-100 bg-green-50 rounded-lg">
+            <h4 className="font-bold text-green-800 mb-2">CSP Headers</h4>
+            <p className="text-xs text-green-700 leading-relaxed">
+              In production, the hosting page should send a <code>Content-Security-Policy</code> header that 
+              disallows framing from other domains (<code>frame-ancestors 'none'</code>) and 
+              restricts where scripts can connect.
+            </p>
           </div>
         </div>
       </section>
